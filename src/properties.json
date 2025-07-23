@@ -1,0 +1,30 @@
+
+[
+  {
+    "id": 1,
+    "address": "123 Main St, Anytown, USA",
+    "price": 500000,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "lat": 34.0522,
+    "lng": -118.2437
+  },
+  {
+    "id": 2,
+    "address": "456 Oak Ave, Anytown, USA",
+    "price": 750000,
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "lat": 34.055,
+    "lng": -118.25
+  },
+  {
+    "id": 3,
+    "address": "789 Pine Ln, Anytown, USA",
+    "price": 350000,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "lat": 34.06,
+    "lng": -118.26
+  }
+]
