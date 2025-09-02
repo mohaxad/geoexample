@@ -831,27 +831,293 @@ const arabicStyles = `
     border-color: #9ca3af;
   }
 
+  .rtl-range-input {
+    direction: rtl;
+  }
+
+  .rtl-range-input .ais-RangeInput-separator {
+    margin: 0 8px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  /* Clean Black & White Filter Panel Styling */
+  .custom-refinement-list .ais-RefinementList-list {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #ffffff;
+  }
+
+  .custom-refinement-list .ais-RefinementList-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-refinement-list .ais-RefinementList-list::-webkit-scrollbar-track {
+    background: #ffffff;
+  }
+
+  .custom-refinement-list .ais-RefinementList-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+  }
+
+  .custom-refinement-list .ais-RefinementList-list::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
+  .refinement-item-label {
+    transition: all 0.15s ease;
+    border-radius: 4px;
+    margin: 1px 0;
+    border: 1px solid transparent;
+  }
+
+  .refinement-item-label:hover {
+    background-color: #f9fafb !important;
+    border-color: #e5e7eb;
+  }
+
+  .refinement-item-label.ais-RefinementList-item--selected {
+    background-color: #111827;
+    border-color: #111827;
+  }
+
+  .refinement-item-label.ais-RefinementList-item--selected:hover {
+    background-color: #1f2937 !important;
+    border-color: #1f2937;
+  }
+
+  .refinement-checkbox {
+    width: 14px !important;
+    height: 14px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 2px !important;
+    background-color: white !important;
+    transition: all 0.15s ease !important;
+    margin: 0 !important;
+  }
+
+  .refinement-checkbox:checked {
+    background-color: #111827 !important;
+    border-color: #111827 !important;
+  }
+
+  .refinement-checkbox:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .refinement-text {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 400;
+  }
+
+  .refinement-item-label.ais-RefinementList-item--selected .refinement-text {
+    color: white;
+    font-weight: 500;
+  }
+
+  .refinement-count {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 16px;
+  }
+
+  .refinement-item-label.ais-RefinementList-item--selected .refinement-count {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .show-more-button {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: white;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+  }
+
+  .show-more-button:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+  }
+
+  /* Clean Range Input Styling */
+  .rtl-range-input .ais-RangeInput-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    direction: rtl;
+  }
+
+  .rtl-range-input .ais-RangeInput-input {
+    width: 70px !important;
+    padding: 6px 8px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 4px !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    transition: all 0.15s ease !important;
+    background-color: white;
+  }
+
+  .rtl-range-input .ais-RangeInput-input:focus {
+    outline: none !important;
+    border-color: #111827 !important;
+    background-color: white !important;
+  }
+
+  .rtl-range-input .ais-RangeInput-separator {
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 14px;
+    margin: 0 2px;
+  }
+
+  /* Clean Filter Group Styling */
+  .filter-group {
+    background: white;
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+    transition: all 0.15s ease;
+  }
+
+  .filter-group:hover {
+    border-color: #d1d5db;
+  }
+
+  .filter-subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  /* Clean Filter Panel Header */
+  .filter-panel-header {
+    background: #111827;
+    color: white;
+    padding: 16px;
+    border-radius: 6px 6px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .filter-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Clean Clear Refinements Styling */
+  .filter-panel-header .ais-ClearRefinements-button {
+    background: transparent !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 4px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+    margin-top: 8px !important;
+  }
+
+  .filter-panel-header .ais-ClearRefinements-button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .filter-panel-header .ais-ClearRefinements-button:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+  }
+
+  /* Clean Filter Panel Content */
+  .filter-panel-content {
+    padding: 16px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #ffffff;
+  }
+
+  .filter-panel-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-track {
+    background: #ffffff;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
+  /* Clean Filter Panel Footer */
   .filter-panel-footer {
-    padding: 20px 24px;
+    padding: 16px;
     border-top: 1px solid #e5e7eb;
     background: #f9fafb;
+    border-radius: 0 0 6px 6px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
   }
 
   .show-results-button {
     width: 100%;
-    background: #3b82f6;
+    padding: 10px 20px;
+    background: #111827;
     color: white;
     border: none;
-    padding: 14px 20px;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 4px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: all 0.15s ease;
   }
 
   .show-results-button:hover {
-    background: #2563eb;
+    background: #1f2937;
+  }
+
+  .show-results-button:active {
+    background: #111827;
   }
 
   /* Mobile Responsive */
@@ -958,15 +1224,9 @@ const debugLog = (...args) => {
 // Simple, clean search client - best practices implementation
 const searchClient = {
   search(requests) {
-    console.log('🔍 SEARCH TRIGGERED:', {
-      timestamp: new Date().toISOString(),
-      stackTrace: new Error().stack,
-      requests: requests.map(r => ({
-        indexName: r.indexName,
-        query: r.params?.query,
-        page: r.params?.page,
-        facetFilters: r.params?.facetFilters
-      }))
+    debugLog('Search request:', {
+      query: requests[0]?.params?.query,
+      page: requests[0]?.params?.page
     });
     
     const request = requests[0];
@@ -1404,135 +1664,219 @@ const CustomRefinementList = connectRefinementList(({ items, refine, showMore, c
   </div>
 ));
 
-// Filter Panel Component
-const FilterPanel = connectStateResults(({ searchResults, isFilterPanelVisible, onClose }) => {
-  const nbHits = searchResults?.nbHits || 0;
-  
-  const booleanLabels = {
-    true: 'نعم',
-    false: 'لا'
-  };
-
-  const furnishedLabels = {
-    true: 'مفروش',
-    false: 'غير مفروش'
-  };
-
-  const rentLabels = {
-    true: 'متاح للإيجار',
-    false: 'غير متاح للإيجار'
-  };
-
-  const purchaseLabels = {
-    true: 'تم البيع',
-    false: 'متاح للبيع'
-  };
-
-  return (
-    <>
-      {isFilterPanelVisible && <div className="filter-overlay" onClick={onClose} />}
+// Simplified Filter Panel - using standard RefinementList to prevent loops
+const FilterPanel = ({ isFilterPanelVisible, onClose }) => (
+  <>
+    {isFilterPanelVisible && <div className="filter-overlay" onClick={onClose} />}
+    
+    <div className={`filter-panel ${isFilterPanelVisible ? 'visible' : ''}`}>
+      <div className="filter-panel-header">
+        <h3 className="filter-title">🔍 الفلاتر</h3>
+        <ClearRefinements />
+      </div>
       
-      <div className={`filter-panel ${isFilterPanelVisible ? 'visible' : ''}`}>
-        <div className="filter-panel-header">
-          <h3 className="filter-title">🔍 الفلاتر</h3>
-          <CustomClearRefinements />
+      <div className="filter-panel-content">
+        {/* Property Status */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">حالة العقار</h4>
+          <RefinementList 
+            attribute="status_label_ar" 
+            limit={8}
+            showMore={true}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count',
+              showMore: 'show-more-button'
+            }}
+          />
         </div>
-        
-        <div className="filter-panel-content">
-          {/* Property Status */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">حالة العقار</h4>
-            <CustomRefinementList 
-              attribute="status_label_ar" 
-              limit={8}
-              showMore={true}
-            />
-          </div>
 
-          {/* Property Type */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">نوع العقار</h4>
-            <CustomRefinementList 
-              attribute="type_label_ar" 
-              limit={6}
-              showMore={true}
-            />
-          </div>
-
-          {/* Bedrooms */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">عدد غرف النوم</h4>
-            <CustomRefinementList 
-              attribute="bedrooms" 
-              limit={8}
-            />
-          </div>
-
-          {/* Bathrooms */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">عدد الحمامات</h4>
-            <CustomRefinementList 
-              attribute="bathrooms" 
-              limit={6}
-            />
-          </div>
-
-          {/* Furnished */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">حالة الأثاث</h4>
-            <BooleanRefinementList 
-              attribute="is_furnished" 
-              transformLabels={(label) => furnishedLabels[label] || label}
-            />
-          </div>
-
-          {/* Available for Rent */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">متاح للإيجار</h4>
-            <BooleanRefinementList 
-              attribute="available_for_rent" 
-              transformLabels={(label) => rentLabels[label] || label}
-            />
-          </div>
-
-          {/* Purchase Completed */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">حالة الشراء</h4>
-            <BooleanRefinementList 
-              attribute="purchase_completed" 
-              transformLabels={(label) => purchaseLabels[label] || label}
-            />
-          </div>
-
-          {/* Status Source */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">مصدر الحالة</h4>
-            <CustomRefinementList 
-              attribute="status_source_code" 
-              limit={5}
-              showMore={true}
-            />
-          </div>
-
-          {/* Data Source */}
-          <div className="filter-group">
-            <h4 className="filter-subtitle">مصدر البيانات</h4>
-            <CustomRefinementList 
-              attribute="source" 
-              limit={5}
-            />
-          </div>
+        {/* Property Type */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">نوع العقار</h4>
+          <RefinementList 
+            attribute="type_label_ar" 
+            limit={6}
+            showMore={true}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count',
+              showMore: 'show-more-button'
+            }}
+          />
         </div>
-        
-        <div className="filter-panel-footer">
-          <button className="show-results-button" onClick={onClose}>
-            عرض {nbHits.toLocaleString('ar-SA')} نتيجة
-          </button>
+
+        {/* Bedrooms */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">عدد غرف النوم</h4>
+          <RefinementList 
+            attribute="bedrooms" 
+            limit={8}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
+        </div>
+
+        {/* Bathrooms */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">عدد الحمامات</h4>
+          <RefinementList 
+            attribute="bathrooms" 
+            limit={6}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
+        </div>
+
+        {/* Area Range */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">المساحة (متر مربع)</h4>
+          <RangeInput 
+            attribute="area_total_sqm"
+            classNames={{
+              root: 'rtl-range-input',
+              form: 'flex gap-2 items-center',
+              input: 'w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center',
+              submit: 'hidden',
+              separator: 'text-gray-500'
+            }}
+          />
+        </div>
+
+        {/* Furnished */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">حالة الأثاث</h4>
+          <RefinementList 
+            attribute="is_furnished" 
+            transformItems={items => items.map(item => ({
+              ...item,
+              label: item.label === 'true' ? 'مفروش' : item.label === 'false' ? 'غير مفروش' : item.label
+            }))}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
+        </div>
+
+        {/* Available for Rent */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">متاح للإيجار</h4>
+          <RefinementList 
+            attribute="available_for_rent" 
+            transformItems={items => items.map(item => ({
+              ...item,
+              label: item.label === 'true' ? 'متاح للإيجار' : item.label === 'false' ? 'غير متاح للإيجار' : item.label
+            }))}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
+        </div>
+
+        {/* Purchase Completed */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">حالة الشراء</h4>
+          <RefinementList 
+            attribute="purchase_completed" 
+            transformItems={items => items.map(item => ({
+              ...item,
+              label: item.label === 'true' ? 'تم البيع' : item.label === 'false' ? 'متاح للبيع' : item.label
+            }))}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
+        </div>
+
+        {/* Status Source */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">مصدر الحالة</h4>
+          <RefinementList 
+            attribute="status_source_code" 
+            limit={5}
+            showMore={true}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count',
+              showMore: 'show-more-button'
+            }}
+          />
+        </div>
+
+        {/* Data Source */}
+        <div className="filter-group">
+          <h4 className="filter-subtitle">مصدر البيانات</h4>
+          <RefinementList 
+            attribute="source" 
+            limit={5}
+            classNames={{
+              root: 'custom-refinement-list',
+              list: 'space-y-2',
+              item: 'refinement-item-label',
+              label: 'flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50',
+              checkbox: 'refinement-checkbox',
+              labelText: 'refinement-text flex-1',
+              count: 'refinement-count'
+            }}
+          />
         </div>
       </div>
-    </>
-  );
-});
+      
+      <div className="filter-panel-footer">
+        <button className="show-results-button" onClick={onClose}>
+          عرض النتائج
+        </button>
+      </div>
+    </div>
+  </>
+);
 
 // Map component
 const MapWithBounds = memo(function MapWithBounds({ hits, onBoundsChange }) {
@@ -1770,9 +2114,7 @@ function App() {
               
               <div className="flex gap-4 items-center mt-4">
                 <div className="flex-1">
-                  {/* SEARCH BOX TEMPORARILY DISABLED FOR DEBUGGING */}
-                  {false && <CustomSearchBox placeholder="ابحث عن عقار، مشروع، أو موقع..." />}
-                  <div className="p-4 border rounded text-center text-gray-500">Search disabled for debugging</div>
+                  <CustomSearchBox placeholder="ابحث عن عقار، مشروع، أو موقع..." />
                 </div>
                 
                               {/* Filter Toggle */}
@@ -1808,12 +2150,11 @@ function App() {
           </div>
         </header>
 
-
-        {/* Filter Panel - TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
-        {false && <FilterPanel 
+        {/* Filter Panel */}
+        <FilterPanel 
           isFilterPanelVisible={isFilterPanelVisible}
           onClose={() => setIsFilterPanelVisible(false)}
-        />}
+        />
 
         {/* Main Content */}
         <main className="main-content">
@@ -1825,8 +2166,7 @@ function App() {
             </div>
             
             <div className="results-info">
-              {/* TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
-              {false && <Stats 
+              <Stats 
                 classNames={{
                   root: 'stats-display',
                   text: 'stats-text'
@@ -1834,30 +2174,20 @@ function App() {
                 translations={{
                   stats: (nbHits, processingTimeMS) => `${nbHits} وحدة`
                 }}
-              />}
+              />
               
-              {false && <div className="sort-section">
-                <SortBy 
-                  defaultRefinement="realestate_example:created_at:desc"
-                  items={SORT_BY_ITEMS}
-                  classNames={SORT_BY_CLASS_NAMES}
-                />
-              </div>}
             </div>
           </div>
 
           {viewMode === 'map' ? (
-            /* Map View - TEMPORARILY DISABLED */
+            /* Map View */
             <div className="map-view">
-              {false && <MapComponent />}
-              <div className="p-8 text-center">Map view temporarily disabled for debugging</div>
+              <MapComponent />
             </div>
           ) : (
             /* Grid View */
             <div className="results-section">
-              {/* TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
-              {false && <SimpleHits />}
-              <div className="p-8 text-center">Results temporarily disabled for debugging</div>
+              <SimpleHits />
             </div>
           )}
         </main>
