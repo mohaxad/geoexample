@@ -955,134 +955,19 @@ const debugLog = (...args) => {
   }
 };
 
-// Request counter, circuit breaker, and deduplication
-let requestCounter = 0;
-let lastRequestTime = 0;
-const MAX_REQUESTS_PER_SECOND = 3; // Increased slightly for better UX
-const MAX_TOTAL_REQUESTS = 100; // Increased limit
-let lastRequestSignature = '';
-let pendingRequests = new Map();
-
-// Reset function to clear the counter (can be called from console)
-window.resetRequestCounter = () => {
-  requestCounter = 0;
-  lastRequestTime = 0;
-  lastRequestSignature = '';
-  pendingRequests.clear();
-  console.log('🔄 Request counter reset');
-};
-
-// Enhanced search client with corrected API pattern and circuit breaker - moved outside to prevent recreation
-const createSearchClient = () => ({
+// Simple, clean search client - best practices implementation
+const searchClient = {
   search(requests) {
-    const now = Date.now();
-    
-    // Create request signature for deduplication
     const request = requests[0];
-    const requestSignature = JSON.stringify({
-      query: request.params.query || '',
-      facetFilters: request.params.facetFilters || [],
-      page: request.params.page || 0,
-      indexName: request.indexName
-    });
-    
-    // Return pending request if same request is already in flight
-    if (pendingRequests.has(requestSignature)) {
-      console.log('🔄 Returning existing pending request');
-      return pendingRequests.get(requestSignature);
+    if (!request) {
+      return Promise.resolve({ results: [] });
     }
-    
-    // Skip identical consecutive requests
-    if (requestSignature === lastRequestSignature) {
-      console.log('🔄 Skipping identical consecutive request');
-      return Promise.resolve({
-        results: [{
-          hits: [],
-          nbHits: 0,
-          facets: {},
-          page: 0,
-          nbPages: 0,
-          hitsPerPage: 20,
-          processingTimeMS: 0,
-          query: request.params.query || '',
-          params: '',
-          exhaustiveNbHits: true,
-          search_id: `duplicate_${Date.now()}`,
-          indexNameForTracking: request.indexName.split(':')[0],
-          appliedFiltersForTracking: [],
-        }]
-      });
-    }
-    
-    lastRequestSignature = requestSignature;
-    
-    // Circuit breaker: prevent too many requests
-    if (requestCounter > MAX_TOTAL_REQUESTS) {
-      console.warn('🚨 Circuit breaker activated: Too many requests!', requestCounter);
-      return Promise.resolve({
-        results: [{
-          hits: [],
-          nbHits: 0,
-          facets: {},
-          page: 0,
-          nbPages: 0,
-          hitsPerPage: 20,
-          processingTimeMS: 0,
-          query: '',
-          params: '',
-          exhaustiveNbHits: true,
-          search_id: `circuit_breaker_${Date.now()}`,
-          indexNameForTracking: 'realestate_example',
-          appliedFiltersForTracking: [],
-        }]
-      });
-    }
-
-    // Rate limiting: max 2 requests per second - simplified to prevent recursion
-    if (now - lastRequestTime < (1000 / MAX_REQUESTS_PER_SECOND) && requestCounter > 0) {
-      console.warn('🚨 Rate limit exceeded, returning empty results');
-      return Promise.resolve({
-        results: [{
-          hits: [],
-          nbHits: 0,
-          facets: {},
-          page: 0,
-          nbPages: 0,
-          hitsPerPage: 20,
-          processingTimeMS: 0,
-          query: '',
-          params: '',
-          exhaustiveNbHits: true,
-          search_id: `rate_limited_${Date.now()}`,
-          indexNameForTracking: 'realestate_example',
-          appliedFiltersForTracking: [],
-        }]
-      });
-    }
-
-    requestCounter++;
-    lastRequestTime = now;
-
-    // Create the promise for this request and cache it
-    const requestPromise = this._performSearch(requests, requestSignature);
-    pendingRequests.set(requestSignature, requestPromise);
-    
-    // Clean up the pending request when done
-    requestPromise.finally(() => {
-      pendingRequests.delete(requestSignature);
-    });
-    
-    return requestPromise;
-  },
-  
-  _performSearch(requests, requestSignature) {
-    const request = requests[0];
     const query = request.params.query || '';
     const facetFilters = request.params.facetFilters || [];
     const page = request.params.page || 0;
     const hitsPerPage = request.params.hitsPerPage || 20;
     const [indexName, ...sortParts] = request.indexName.split(':');
-    const sort = sortParts.length ? sortParts.join(':') : null;
+    const sort = sortParts.length ? sortParts.join(':') : 'created_at:desc';
     
     // Build filters from facetFilters
     const filters = facetFilters.flat().map(f => {
@@ -1102,147 +987,76 @@ const createSearchClient = () => ({
     url.searchParams.set('index', indexName);
     url.searchParams.set('offset', page * hitsPerPage);
     url.searchParams.set('limit', hitsPerPage);
-    url.searchParams.set('facets', '*'); // Use * to get all facets
-    
-    // Default sort by created_at:desc if no sort specified
-    const defaultSort = sort || 'created_at:desc';
-    url.searchParams.set('sort', defaultSort);
+    url.searchParams.set('facets', '*');
+    url.searchParams.set('sort', sort);
     
     if (filters) {
       url.searchParams.set('filters', filters);
     }
 
-    console.log(`🔍 API Request #${requestCounter}:`, {
-      url: url.toString(),
-      query,
-      page,
-      hitsPerPage,
-      filters,
-      timestamp: new Date().toISOString(),
-      requestId: requestCounter
-    });
-
-    // Log stack trace for debugging infinite loops (only for first few requests)
-    if (requestCounter <= 5) {
-      console.trace(`🔍 Request #${requestCounter} stack trace:`);
-    }
+    debugLog('Search request:', { query, page, hitsPerPage, filters });
 
     return fetch(url.toString(), {
-      headers: {
-        'x-api-key': API_KEY
-      }
+      headers: { 'x-api-key': API_KEY }
     })
-      .then(res => {
-        if (!res.ok) {
-          console.error('Fetch error:', res.status, res.statusText);
-          return res.text().then(text => { 
-            console.error('Fetch error body:', text);
-            throw new Error(`HTTP error ${res.status}`); 
-          });
-        }
-        return res.json();
-      })
-      .then(data => {
-        debugLog('Raw API response:', data);
-        
-        let responseData;
-        if (data.success && data.data) {
-          responseData = data.data;
-        } else {
-          throw new Error('Invalid API response structure');
-        }
+    .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+    .then(data => {
+      if (!data.success || !data.data) {
+        throw new Error('Invalid API response');
+      }
 
-        const hits = responseData.hits || [];
-        const nbHits = responseData.nbHits || hits.length;
-        const facetDistribution = responseData.facetDistribution || {};
-        const processingTimeMS = responseData.processingTimeMS || 0;
+      const responseData = data.data;
+      const hits = responseData.hits || [];
+      const nbHits = responseData.nbHits || hits.length;
+      const facetDistribution = responseData.facetDistribution || {};
 
-        debugLog(`Processing ${hits.length} hits out of ${nbHits} total`);
-        debugLog('Facet distribution:', facetDistribution);
-
-        return {
-          results: [
-            {
-              hits: hits.map(hit => {
-                const transformedHighlightResult = {};
-                if (hit._formatted) {
-                  for (const key in hit._formatted) {
-                    if (Object.prototype.hasOwnProperty.call(hit._formatted, key)) {
-                      transformedHighlightResult[key] = { value: hit._formatted[key] };
-                    }
-                  }
-                }
-
-                const geoData = {};
-                if (hit._geo && hit._geo.lat && hit._geo.lng) {
-                  geoData._geo = {
-                    lat: parseFloat(hit._geo.lat),
-                    lng: parseFloat(hit._geo.lng)
-                  };
-                } else if (hit.lat && hit.lng) {
-                  geoData._geo = {
-                    lat: parseFloat(hit.lat),
-                    lng: parseFloat(hit.lng)
-                  };
-                } else if (hit.long && hit.lat) {
-                  geoData._geo = {
-                    lat: parseFloat(hit.lat),
-                    lng: parseFloat(hit.long)
-                  };
-                }
-
-                return {
-                  ...hit,
-                  ...geoData,
-                  objectID: hit.primary_key || String(Math.random()),
-                  _highlightResult: transformedHighlightResult
-                };
-              }),
-              nbHits: nbHits,
-              facets: facetDistribution, // Now returning actual facet data
-              page,
-              nbPages: Math.ceil(nbHits / hitsPerPage),
-              hitsPerPage,
-              processingTimeMS,
-              query,
-              params: request.params ? JSON.stringify(request.params) : '',
-              exhaustiveNbHits: responseData.exhaustiveNbHits !== undefined ? responseData.exhaustiveNbHits : true,
-              search_id: responseData.searchId || data.requestId || `search_${Date.now()}`,
-              indexNameForTracking: indexName,
-              appliedFiltersForTracking: facetFilters,
-            }
-          ]
-        };
-      })
-      .catch(error => {
-        console.error('Error in searchClient:', error);
-        const originalRequest = requests && requests[0];
-        const queryFromRequest = (originalRequest && originalRequest.params && originalRequest.params.query) || '';
-        const baseIndexNameFromRequest = (originalRequest && originalRequest.indexName) ? originalRequest.indexName.split(':')[0] : 'realestate_example';
-
-        return {
-          results: [{
-            hits: [],
-            nbHits: 0,
-            facets: {},
-            page: 0,
-            nbPages: 0,
-            hitsPerPage: 0,
-            processingTimeMS: 0,
-            query: queryFromRequest,
-            params: '',
-            exhaustiveNbHits: true,
-            search_id: `error_search_id_${Date.now()}`,
-            indexNameForTracking: baseIndexNameFromRequest,
-            appliedFiltersForTracking: facetFilters,
-          }]
-        };
-      });
+      return {
+        results: [{
+          hits: hits.map(hit => ({
+            ...hit,
+            _geo: hit._geo || (hit.lat && hit.lng ? { lat: parseFloat(hit.lat), lng: parseFloat(hit.lng) } : null),
+            objectID: hit.primary_key || hit.id || `hit_${Math.random()}`,
+            _highlightResult: hit._formatted ? Object.fromEntries(
+              Object.entries(hit._formatted).map(([key, value]) => [key, { value }])
+            ) : {}
+          })),
+          nbHits,
+          facets: facetDistribution,
+          page,
+          nbPages: Math.ceil(nbHits / hitsPerPage),
+          hitsPerPage,
+          processingTimeMS: responseData.processingTimeMS || 0,
+          query,
+          params: JSON.stringify(request.params || {}),
+          exhaustiveNbHits: true,
+          search_id: `search_${Date.now()}`,
+          indexNameForTracking: indexName,
+          appliedFiltersForTracking: facetFilters
+        }]
+      };
+    })
+    .catch(error => {
+      console.error('Search error:', error);
+      return {
+        results: [{
+          hits: [],
+          nbHits: 0,
+          facets: {},
+          page: 0,
+          nbPages: 0,
+          hitsPerPage,
+          processingTimeMS: 0,
+          query,
+          params: '',
+          exhaustiveNbHits: true,
+          search_id: `error_${Date.now()}`,
+          indexNameForTracking: indexName,
+          appliedFiltersForTracking: facetFilters
+        }]
+      };
+    });
   }
-});
-
-// Create a single instance of the search client to prevent recreation
-const searchClient = createSearchClient();
+};
 
 // Riyadh coordinates
 const RIYADH_LAT = 24.7136;
@@ -1427,102 +1241,73 @@ const Hit = memo(({ hit, onClick }) => {
   );
 });
 
-// Custom Search Box Component with debouncing (memoized for performance)
-const InstantSearchBoxComponent = memo(({ currentRefinement, refine, placeholder }) => {
+// Clean Search Box Component - best practices
+const SearchBoxComponent = memo(({ currentRefinement, refine, placeholder }) => {
   const [inputValue, setInputValue] = useState(currentRefinement);
-  const inputRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const debounceRef = useRef(null);
 
+  // Sync with external refinement changes only when necessary
   useEffect(() => {
-    // Only update if the refinement is different from input to prevent loops
     if (currentRefinement !== inputValue) {
       setInputValue(currentRefinement);
     }
   }, [currentRefinement]);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
   }, []);
 
-  const onChange = useCallback((event) => {
-    const newValue = event.currentTarget.value;
+  const handleInputChange = useCallback((e) => {
+    const value = e.target.value;
+    setInputValue(value);
     
-    // Only update if value actually changed
-    if (newValue === inputValue) return;
-    
-    setInputValue(newValue);
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
     }
     
-    // Immediate search for empty values, debounced for others
-    if (newValue === '') {
-      refine(newValue);
-    } else {
-      // Debounce search by 100ms as requested  
-      timeoutRef.current = setTimeout(() => {
-        refine(newValue);
-      }, 100);
-    }
-  }, [inputValue, refine]);
-
-  const onSubmit = useCallback((event) => {
-    event.preventDefault();
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    refine(inputValue);
-    if (inputRef.current) {
-      inputRef.current.blur();
-    }
-  }, [inputValue, refine]);
-
-  const onReset = useCallback(() => {
-    setInputValue('');
-    refine('');
+    // Debounce search - 100ms as requested
+    debounceRef.current = setTimeout(() => {
+      refine(value);
+    }, 100);
   }, [refine]);
 
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    refine(inputValue);
+  }, [inputValue, refine]);
+
   return (
-    <div className="w-full">
-      <form
-        role="search"
-        className="relative"
-        noValidate
-        onSubmit={onSubmit}
-        onReset={onReset}
+    <form onSubmit={handleSubmit} className="relative w-full">
+      <input
+        type="search"
+        value={inputValue}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-right"
+        dir="rtl"
+        autoComplete="off"
+        spellCheck="false"
+      />
+      <button
+        type="submit"
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500"
       >
-        <input
-          ref={inputRef}
-          className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-right rtl-input"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          placeholder={placeholder}
-          spellCheck="false"
-          type="search"
-          value={inputValue}
-          onChange={onChange}
-          dir="rtl"
-        />
-        <button
-          type="submit"
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </button>
-      </form>
-    </div>
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </button>
+    </form>
   );
 });
 
-const CustomSearchBox = connectSearchBox(InstantSearchBoxComponent);
+const CustomSearchBox = connectSearchBox(SearchBoxComponent);
 
 // Filter Icon Component
 const FilterIcon = () => (
@@ -1915,7 +1700,9 @@ const MapComponent = connectStateResults(({ searchResults }) => {
 // Move these constants outside the component to prevent re-creation
 const CONFIGURE_PROPS = {
   hitsPerPage: 20,
-  attributesToRetrieve: ['*']
+  attributesToRetrieve: ['*'],
+  distinct: true,
+  enablePersonalization: false
 };
 
 const SORT_BY_ITEMS = [
@@ -1932,8 +1719,7 @@ const SORT_BY_CLASS_NAMES = {
 };
 
 function App() {
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
-  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
   const [isFilterPanelVisible, setIsFilterPanelVisible] = useState(false);
 
   return (
@@ -2009,113 +1795,6 @@ function App() {
           </div>
         </header>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="bg-white border-b shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 py-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {/* Status Filter */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">حالة العقار</h3>
-                  <RefinementList 
-                    attribute="status_label_ar"
-                    limit={5}
-                    showMore={true}
-                    classNames={{
-                      root: 'text-right',
-                      list: 'space-y-1',
-                      item: 'flex items-center',
-                      label: 'flex items-center cursor-pointer text-sm',
-                      checkbox: 'ml-2 rounded',
-                      labelText: 'text-gray-700'
-                    }}
-                  />
-                </div>
-                
-                {/* Property Type Filter */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">نوع العقار</h3>
-                  <RefinementList 
-                    attribute="type_label_ar"
-                    limit={5}
-                    classNames={{
-                      root: 'text-right',
-                      list: 'space-y-1',
-                      item: 'flex items-center',
-                      label: 'flex items-center cursor-pointer text-sm',
-                      checkbox: 'ml-2 rounded',
-                      labelText: 'text-gray-700'
-                    }}
-                  />
-                </div>
-                
-                {/* Bedrooms Filter */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">غرف النوم</h3>
-                  <RefinementList 
-                    attribute="bedrooms"
-                    limit={5}
-                    classNames={{
-                      root: 'text-right',
-                      list: 'space-y-1',
-                      item: 'flex items-center',
-                      label: 'flex items-center cursor-pointer text-sm',
-                      checkbox: 'ml-2 rounded',
-                      labelText: 'text-gray-700'
-                    }}
-                  />
-                </div>
-                
-                {/* Bathrooms Filter */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">دورات المياه</h3>
-                  <RefinementList 
-                    attribute="bathrooms"
-                    limit={5}
-                    classNames={{
-                      root: 'text-right',
-                      list: 'space-y-1',
-                      item: 'flex items-center',
-                      label: 'flex items-center cursor-pointer text-sm',
-                      checkbox: 'ml-2 rounded',
-                      labelText: 'text-gray-700'
-                    }}
-                  />
-                </div>
-                
-                {/* Area Range */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">المساحة (متر مربع)</h3>
-                  <RangeInput 
-                    attribute="area_total_sqm"
-                    classNames={{
-                      root: 'text-right',
-                      form: 'flex gap-2',
-                      input: 'w-full px-2 py-1 border border-gray-300 rounded text-xs',
-                      submit: 'hidden'
-                    }}
-                  />
-                </div>
-                
-                {/* Furnished Filter */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">مفروش</h3>
-                  <RefinementList 
-                    attribute="is_furnished"
-                    classNames={{
-                      root: 'text-right',
-                      list: 'space-y-1',
-                      item: 'flex items-center',
-                      label: 'flex items-center cursor-pointer text-sm',
-                      checkbox: 'ml-2 rounded',
-                      labelText: 'text-gray-700'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Filter Panel */}
         <FilterPanel 
