@@ -955,16 +955,20 @@ const debugLog = (...args) => {
   }
 };
 
-// Request counter and circuit breaker
+// Request counter, circuit breaker, and deduplication
 let requestCounter = 0;
 let lastRequestTime = 0;
-const MAX_REQUESTS_PER_SECOND = 2;
-const MAX_TOTAL_REQUESTS = 50;
+const MAX_REQUESTS_PER_SECOND = 3; // Increased slightly for better UX
+const MAX_TOTAL_REQUESTS = 100; // Increased limit
+let lastRequestSignature = '';
+let pendingRequests = new Map();
 
 // Reset function to clear the counter (can be called from console)
 window.resetRequestCounter = () => {
   requestCounter = 0;
   lastRequestTime = 0;
+  lastRequestSignature = '';
+  pendingRequests.clear();
   console.log('🔄 Request counter reset');
 };
 
@@ -972,6 +976,45 @@ window.resetRequestCounter = () => {
 const createSearchClient = () => ({
   search(requests) {
     const now = Date.now();
+    
+    // Create request signature for deduplication
+    const request = requests[0];
+    const requestSignature = JSON.stringify({
+      query: request.params.query || '',
+      facetFilters: request.params.facetFilters || [],
+      page: request.params.page || 0,
+      indexName: request.indexName
+    });
+    
+    // Return pending request if same request is already in flight
+    if (pendingRequests.has(requestSignature)) {
+      console.log('🔄 Returning existing pending request');
+      return pendingRequests.get(requestSignature);
+    }
+    
+    // Skip identical consecutive requests
+    if (requestSignature === lastRequestSignature) {
+      console.log('🔄 Skipping identical consecutive request');
+      return Promise.resolve({
+        results: [{
+          hits: [],
+          nbHits: 0,
+          facets: {},
+          page: 0,
+          nbPages: 0,
+          hitsPerPage: 20,
+          processingTimeMS: 0,
+          query: request.params.query || '',
+          params: '',
+          exhaustiveNbHits: true,
+          search_id: `duplicate_${Date.now()}`,
+          indexNameForTracking: request.indexName.split(':')[0],
+          appliedFiltersForTracking: [],
+        }]
+      });
+    }
+    
+    lastRequestSignature = requestSignature;
     
     // Circuit breaker: prevent too many requests
     if (requestCounter > MAX_TOTAL_REQUESTS) {
@@ -995,19 +1038,44 @@ const createSearchClient = () => ({
       });
     }
 
-    // Rate limiting: max 2 requests per second
+    // Rate limiting: max 2 requests per second - simplified to prevent recursion
     if (now - lastRequestTime < (1000 / MAX_REQUESTS_PER_SECOND) && requestCounter > 0) {
-      console.warn('🚨 Rate limit exceeded, delaying request...');
-      return new Promise(resolve => {
-        setTimeout(() => {
-          this.search(requests).then(resolve);
-        }, 500);
+      console.warn('🚨 Rate limit exceeded, returning empty results');
+      return Promise.resolve({
+        results: [{
+          hits: [],
+          nbHits: 0,
+          facets: {},
+          page: 0,
+          nbPages: 0,
+          hitsPerPage: 20,
+          processingTimeMS: 0,
+          query: '',
+          params: '',
+          exhaustiveNbHits: true,
+          search_id: `rate_limited_${Date.now()}`,
+          indexNameForTracking: 'realestate_example',
+          appliedFiltersForTracking: [],
+        }]
       });
     }
 
     requestCounter++;
     lastRequestTime = now;
 
+    // Create the promise for this request and cache it
+    const requestPromise = this._performSearch(requests, requestSignature);
+    pendingRequests.set(requestSignature, requestPromise);
+    
+    // Clean up the pending request when done
+    requestPromise.finally(() => {
+      pendingRequests.delete(requestSignature);
+    });
+    
+    return requestPromise;
+  },
+  
+  _performSearch(requests, requestSignature) {
     const request = requests[0];
     const query = request.params.query || '';
     const facetFilters = request.params.facetFilters || [];
