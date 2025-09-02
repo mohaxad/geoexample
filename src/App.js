@@ -958,6 +958,17 @@ const debugLog = (...args) => {
 // Simple, clean search client - best practices implementation
 const searchClient = {
   search(requests) {
+    console.log('🔍 SEARCH TRIGGERED:', {
+      timestamp: new Date().toISOString(),
+      stackTrace: new Error().stack,
+      requests: requests.map(r => ({
+        indexName: r.indexName,
+        query: r.params?.query,
+        page: r.params?.page,
+        facetFilters: r.params?.facetFilters
+      }))
+    });
+    
     const request = requests[0];
     if (!request) {
       return Promise.resolve({ results: [] });
@@ -1759,7 +1770,9 @@ function App() {
               
               <div className="flex gap-4 items-center mt-4">
                 <div className="flex-1">
-                  <CustomSearchBox placeholder="ابحث عن عقار، مشروع، أو موقع..." />
+                  {/* SEARCH BOX TEMPORARILY DISABLED FOR DEBUGGING */}
+                  {false && <CustomSearchBox placeholder="ابحث عن عقار، مشروع، أو موقع..." />}
+                  <div className="p-4 border rounded text-center text-gray-500">Search disabled for debugging</div>
                 </div>
                 
                               {/* Filter Toggle */}
@@ -1796,11 +1809,11 @@ function App() {
         </header>
 
 
-        {/* Filter Panel */}
-        <FilterPanel 
+        {/* Filter Panel - TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
+        {false && <FilterPanel 
           isFilterPanelVisible={isFilterPanelVisible}
           onClose={() => setIsFilterPanelVisible(false)}
-        />
+        />}
 
         {/* Main Content */}
         <main className="main-content">
@@ -1812,7 +1825,8 @@ function App() {
             </div>
             
             <div className="results-info">
-              <Stats 
+              {/* TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
+              {false && <Stats 
                 classNames={{
                   root: 'stats-display',
                   text: 'stats-text'
@@ -1820,27 +1834,30 @@ function App() {
                 translations={{
                   stats: (nbHits, processingTimeMS) => `${nbHits} وحدة`
                 }}
-              />
+              />}
               
-              <div className="sort-section">
+              {false && <div className="sort-section">
                 <SortBy 
                   defaultRefinement="realestate_example:created_at:desc"
                   items={SORT_BY_ITEMS}
                   classNames={SORT_BY_CLASS_NAMES}
                 />
-              </div>
+              </div>}
             </div>
           </div>
 
           {viewMode === 'map' ? (
-            /* Map View */
+            /* Map View - TEMPORARILY DISABLED */
             <div className="map-view">
-              <MapComponent />
+              {false && <MapComponent />}
+              <div className="p-8 text-center">Map view temporarily disabled for debugging</div>
             </div>
           ) : (
             /* Grid View */
             <div className="results-section">
-              <SimpleHits />
+              {/* TEMPORARILY DISABLED TO STOP INFINITE REQUESTS */}
+              {false && <SimpleHits />}
+              <div className="p-8 text-center">Results temporarily disabled for debugging</div>
             </div>
           )}
         </main>
