@@ -968,8 +968,8 @@ window.resetRequestCounter = () => {
   console.log('🔄 Request counter reset');
 };
 
-// Enhanced search client with corrected API pattern and circuit breaker
-const searchClient = {
+// Enhanced search client with corrected API pattern and circuit breaker - moved outside to prevent recreation
+const createSearchClient = () => ({
   search(requests) {
     const now = Date.now();
     
@@ -1171,7 +1171,10 @@ const searchClient = {
         };
       });
   }
-};
+});
+
+// Create a single instance of the search client to prevent recreation
+const searchClient = createSearchClient();
 
 // Riyadh coordinates
 const RIYADH_LAT = 24.7136;
@@ -1222,8 +1225,8 @@ const getImageUrl = (attachment, projectId) => {
   return attachment.thumbnail || attachment.url || null;
 };
 
-// Custom Hit Component for geo results - Modern Card Design
-const Hit = ({ hit, onClick }) => {
+// Custom Hit Component for geo results - Modern Card Design (memoized for performance)
+const Hit = memo(({ hit, onClick }) => {
   const [isFavorited, setIsFavorited] = useState(false);
   
   if (!hit || typeof hit !== 'object') {
@@ -1354,16 +1357,19 @@ const Hit = ({ hit, onClick }) => {
       </div>
     </div>
   );
-};
+});
 
-// Custom Search Box Component with debouncing
-const InstantSearchBoxComponent = ({ currentRefinement, refine, placeholder }) => {
+// Custom Search Box Component with debouncing (memoized for performance)
+const InstantSearchBoxComponent = memo(({ currentRefinement, refine, placeholder }) => {
   const [inputValue, setInputValue] = useState(currentRefinement);
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    setInputValue(currentRefinement);
+    // Only update if the refinement is different from input to prevent loops
+    if (currentRefinement !== inputValue) {
+      setInputValue(currentRefinement);
+    }
   }, [currentRefinement]);
 
   useEffect(() => {
@@ -1374,8 +1380,12 @@ const InstantSearchBoxComponent = ({ currentRefinement, refine, placeholder }) =
     };
   }, []);
 
-  const onChange = (event) => {
+  const onChange = useCallback((event) => {
     const newValue = event.currentTarget.value;
+    
+    // Only update if value actually changed
+    if (newValue === inputValue) return;
+    
     setInputValue(newValue);
     
     if (timeoutRef.current) {
@@ -1386,14 +1396,14 @@ const InstantSearchBoxComponent = ({ currentRefinement, refine, placeholder }) =
     if (newValue === '') {
       refine(newValue);
     } else {
-      // Debounce search by 100ms as requested
+      // Debounce search by 100ms as requested  
       timeoutRef.current = setTimeout(() => {
         refine(newValue);
       }, 100);
     }
-  };
+  }, [inputValue, refine]);
 
-  const onSubmit = (event) => {
+  const onSubmit = useCallback((event) => {
     event.preventDefault();
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -1402,12 +1412,12 @@ const InstantSearchBoxComponent = ({ currentRefinement, refine, placeholder }) =
     if (inputRef.current) {
       inputRef.current.blur();
     }
-  };
+  }, [inputValue, refine]);
 
-  const onReset = () => {
+  const onReset = useCallback(() => {
     setInputValue('');
     refine('');
-  };
+  }, [refine]);
 
   return (
     <div className="w-full">
@@ -1442,7 +1452,7 @@ const InstantSearchBoxComponent = ({ currentRefinement, refine, placeholder }) =
       </form>
     </div>
   );
-};
+});
 
 const CustomSearchBox = connectSearchBox(InstantSearchBoxComponent);
 
@@ -1750,8 +1760,9 @@ const MapWithBounds = memo(function MapWithBounds({ hits, onBoundsChange }) {
   );
 });
 
-// Simple Hits Component with Grid Layout
-const SimpleHitsComponent = ({ hits }) => {
+
+// Simple Hits Component - use only connectHits to prevent double connection
+const SimpleHits = connectHits(({ hits }) => {
   const handleHitClick = (hit) => {
     debugLog('Location clicked:', hit.name);
   };
@@ -1773,15 +1784,7 @@ const SimpleHitsComponent = ({ hits }) => {
       </div>
     </div>
   );
-};
-
-// Connected Hits with state management
-const ConnectedHits = connectStateResults(({ searchResults }) => {
-  const hits = searchResults ? searchResults.hits : [];
-  return <SimpleHitsComponent hits={hits} />;
 });
-
-const SimpleHits = connectHits(ConnectedHits);
 
 // Results Stats Component
 const ResultsStats = connectStateResults(({ searchResults, isSearchStalled }) => {
